@@ -1,6 +1,6 @@
 import os
 
-directory = "/Users/Nick/Desktop/Audio_Data/CSV_Ouptut/"
+directory = "/Users/Nick/Desktop/Audio_Data/CSV_Output/"
 output = "/Users/Nick/Desktop/Audio_Data/MIDI_Output/"
 
 for filename in os.listdir(directory):
