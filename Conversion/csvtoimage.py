@@ -2,7 +2,7 @@ import os
 import csv
 import numpy as np
 from PIL import Image
-from numpy import eye
+import random
 
 directory = "/Users/Nick/Desktop/Audio_Data/testCSV/"
 output = "/Users/Nick/Desktop/Audio_Data/Formatted_CSV/"
@@ -67,26 +67,125 @@ def numerizeLine (line):
         line[0] = (int(line[0]))
 
 def padLine (line):
-    if len(line) == 7:
+    if len(line) == 9:
         line.append (111)
-    if len(line) == 6:
+    if len(line) == 8:
         line.extend ((111, 111))
-    if len(line) == 5:
+    if len(line) == 7:
         line.extend ((111, 111, 111))
-    if len(line) == 4:
+    if len(line) == 6:
         line.extend ((111, 111, 111, 111))
-    if len(line) == 3:
+    if len(line) == 5:
         line.extend ((111, 111, 111, 111, 111))
-    if len(line) == 2:
+    if len(line) == 4:
         line.extend ((111, 111, 111, 111, 111, 111))
-    if len(line) == 1:
+    if len(line) == 3:
         line.extend ((111, 111, 111, 111, 111, 111, 111))
+    if len(line) == 2:
+        line.extend ((111, 111, 111, 111, 111, 111, 111, 111))
+    if len(line) == 1:
+        line.extend ((111, 111, 111, 111, 111, 111, 111, 111, 111))
 
 def varyColors(line, track_len):
     line[0] *= int(255/trackCount(csv))
 
-def colorizeTime (line, track_len):
-    line[1] = 0
+def splitTempo (line):
+    length = line[3]
+    factors = factor (length)
+
+    if (len (factors) >= 2):
+        b = 1
+        a = 1
+
+        r = chooseLargest(factors)[0]
+        g = chooseLargest (factors)[1]
+
+        if (g > 255):
+
+            length = chooseLargest(factors)[1]
+            factors = chooseLargest (factor(length))
+
+            g = chooseLargest (factors)[0]
+            b = chooseLargest (factors)[1]
+
+            if (b > 255):
+
+                length = chooseLargest(factors)[1]
+                factors = chooseLargest (factor(length))
+
+                b = chooseLargest (factors)[0]
+                a = chooseLargest (factors)[1]
+
+        line.insert (4, g)
+        line.insert (5, b)
+        line.insert (6, a)
+        line[3] = r
+
+def factor(x):
+    factors = []
+    for i in range(1, x + 1):
+       if x % i == 0:
+           factors.append (i)
+    if len(factors) == 2:
+        # rand = random.randint(0, 1)
+        # if (rand == 0):
+        return factor (x + 1)
+        # else:
+        # return factor (x - 1)
+    else:
+        return factors
+
+def chooseLargest (nums):
+    i = 0
+    for num in nums:
+        if (num > 255 and nums[len(nums)-i]):
+            return [nums[i-1], nums[len(nums)-i]]
+        else:
+            i+=1
+    return [nums[0], nums[len(nums)-1]]
+
+def colorizeTime (line):
+    length = line[1]
+    factors = factor (length)
+
+    if (len (factors) >= 2):
+        b = 1
+        a = 1
+        q = 1
+
+        r = chooseLargest(factors)[0]
+        g = chooseLargest (factors)[1]
+
+        if (g > 255):
+
+            length = chooseLargest(factors)[1]
+            factors = chooseLargest (factor(length))
+
+            g = chooseLargest (factors)[0]
+            b = chooseLargest (factors)[1]
+
+            if (b > 255):
+
+                length = chooseLargest(factors)[1]
+                factors = chooseLargest (factor(length))
+
+                b = chooseLargest (factors)[0]
+                a = chooseLargest (factors)[1]
+
+                if (a > 255):
+                    length = chooseLargest(factors)[1]
+                    factors = chooseLargest (factor(length))
+
+                    a = chooseLargest (factors)[0]
+                    q = chooseLargest (factors)[1]
+
+        # print (r * g * b * a * q)
+
+        line.insert (2, g)
+        line.insert (3, b)
+        line.insert (4, a)
+        line.insert (5, q)
+        line[1] = r
 
 with open(directory + "Chrono_Trigger.csv") as csv_file:
     csv_reader = csv.reader(csv_file, delimiter=',')
@@ -99,11 +198,22 @@ with open(directory + "Chrono_Trigger.csv") as csv_file:
     for line in csv:
         if (numerizeType(line) != 111):
             numerizeLine(line)
-            padLine(line)
+
+            if (line[2] == 127):
+                splitTempo(line)
+
             varyColors(line, track_len)
-            colorizeTime (line, track_len)
+            colorizeTime (line)
+
+            padLine(line)
 
             # print (line)
+
+            for elem in line:
+                if elem > 255:
+                    print ("LINE NOT ADDED")
+                    print (line)
+                    continue
 
             data.append( line )
 
@@ -115,8 +225,11 @@ with open(directory + "Chrono_Trigger.csv") as csv_file:
 
     print (npdata)
 
-    image = Image.fromarray(npdata)
-    image.save(f"{output}Chrono_Trigger.jpeg")
+    image = Image.fromarray(npdata, mode="P")
+
+    print (image)
+
+    image.save(f"{output}Chrono_Trigger.png")
 
 # for filename in os.listdir(directory):
 
