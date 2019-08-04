@@ -54,6 +54,18 @@ def stringizeLine (line):
     if len(line) > 2:
         line[2] = stringizeType(line)
 
+        if (line[2] == 'Marker_t'):
+            if int(line[3]) == 0:
+                line[3] = 'loopStart'
+            elif int(line[3]) == 255:
+                line[3] = 'loopEnd'
+        
+        elif line[2] == 'Key_signature':
+            if int(line[4]) == 0:
+                line[4] = 'major'
+            elif int(line[4]) == 255:
+                line[4] = 'minor'
+
 def unpadLine (line):
     i = len(line) - 1
     for elem in line:
@@ -94,19 +106,6 @@ def normalizeLine (line):
         line.pop (6)
         line.pop (5)
         line.pop (4)
-    
-    elif num2 == 106:
-        if line[4] == 0:
-            line[4] = '"major"'
-        elif line[4] == 255:
-            line[4] = '"minor"'
-        
-    if (num2 == 74):
-        print (line[3])
-        if line[3] == 0:
-            line[3] = '"loopStart"'
-        elif line[3] == 255:
-            line[3] = '"loopEnd"'
 
 
 # def normalizeTime (normalize, data, npdata, i):

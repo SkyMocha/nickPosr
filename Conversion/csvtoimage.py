@@ -79,8 +79,6 @@ def numerizeLine (line):
     if len(line) > 1:
         if (line[2] == 127 or line[2] == 106):
             line[1] = 0
-            print ("BEEP BOPO")
-            print (line)
         else:
             line[1] = (int(line[1]))
         
@@ -256,23 +254,16 @@ with open(directory + "FIGHTING.csv") as csv_file:
             for elem in line:
                 if elem > 255:
                     print ("LINE NOT ADDED")
-                    print (line)
+                    # print (line)
                     continue
 
             data.append( line )
 
     npdata = np.array (data, dtype='int')
 
-    print (npdata)
-
     npdata = np.uint8(npdata)
 
-    print (npdata)
-
     image = Image.fromarray(npdata, mode="P")
-
-    print (image)
-
     image.save(f"{output}FIGHTING.png")
 
 # for filename in os.listdir(directory):
