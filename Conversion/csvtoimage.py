@@ -27,6 +27,8 @@ def numerizeType (line):
         return 42
     elif (command == 'end_of_file'):
         return 63
+    elif (command == 'marker_t'):
+        return 74
     elif (command == 'time_signature'):
         return 84
     elif (command == 'key_signature'):
@@ -55,36 +57,57 @@ def numerizeLine (line):
         line[6] = (int(line[6]))
     if len(line) > 5:
         line[5] = (int(line[5]))
+
     if len(line) > 4:
-        line[4] = (int(line[4]))
+        if line[4] == ' "major"':
+            line[4] = 0
+        elif line[4] == ' "minor"':
+            line[4] = 255
+        else:
+            line[4] = (int(line[4]))
+
     if len(line) > 3:
+        if line[3] == ' "loopStart"':
+            line[3] = 0
+        elif line[3] == ' "loopEnd"':
+            line[3] = 255
         line[3] = (int(line[3]))
+
     if len(line) > 2:
         line[2] = numerizeType(line)
+    
     if len(line) > 1:
-        line[1] = (int(line[1]))
+        if (line[2] == 127 or line[2] == 106):
+            line[1] = 0
+            print ("BEEP BOPO")
+            print (line)
+        else:
+            line[1] = (int(line[1]))
+        
     if len(line) > 0:
         line[0] = (int(line[0]))
 
 def padLine (line):
-    if len(line) == 9:
+    if len(line) == 10:
         line.append (111)
-    if len(line) == 8:
+    if len(line) == 9:
         line.extend ((111, 111))
-    if len(line) == 7:
+    if len(line) == 8:
         line.extend ((111, 111, 111))
-    if len(line) == 6:
+    if len(line) == 7:
         line.extend ((111, 111, 111, 111))
-    if len(line) == 5:
+    if len(line) == 6:
         line.extend ((111, 111, 111, 111, 111))
-    if len(line) == 4:
+    if len(line) == 5:
         line.extend ((111, 111, 111, 111, 111, 111))
-    if len(line) == 3:
+    if len(line) == 4:
         line.extend ((111, 111, 111, 111, 111, 111, 111))
-    if len(line) == 2:
+    if len(line) == 3:
         line.extend ((111, 111, 111, 111, 111, 111, 111, 111))
-    if len(line) == 1:
+    if len(line) == 2:
         line.extend ((111, 111, 111, 111, 111, 111, 111, 111, 111))
+    if len(line) == 1:
+        line.extend ((111, 111, 111, 111, 111, 111, 111, 111, 111, 111))
 
 def varyColors(line, track_len):
     line[0] *= int(255/trackCount(csv))
@@ -121,17 +144,36 @@ def splitTempo (line):
         line.insert (6, a)
         line[3] = r
 
+def splitHeader (line):
+    length = line[5]
+    factors = factor (length)
+
+    if (len (factors) >= 2):
+        b = 1
+
+        r = chooseLargest(factors)[0]
+        g = chooseLargest (factors)[1]
+
+        if (g > 255):
+
+            length = chooseLargest(factors)[1]
+            factors = chooseLargest (factor(length))
+
+            g = chooseLargest (factors)[0]
+            b = chooseLargest (factors)[1]
+
+        line.insert (6, g)
+        line.insert (7, b)
+        line[5] = r
+
 def factor(x):
     factors = []
     for i in range(1, x + 1):
        if x % i == 0:
            factors.append (i)
     if len(factors) == 2:
-        # rand = random.randint(0, 1)
-        # if (rand == 0):
-        return factor (x + 1)
-        # else:
-        # return factor (x - 1)
+        
+        return factor (x - 1)
     else:
         return factors
 
@@ -187,7 +229,7 @@ def colorizeTime (line):
         line.insert (5, q)
         line[1] = r
 
-with open(directory + "Chrono_Trigger.csv") as csv_file:
+with open(directory + "FIGHTING.csv") as csv_file:
     csv_reader = csv.reader(csv_file, delimiter=',')
 
     csv = list(csv_reader)
@@ -201,6 +243,8 @@ with open(directory + "Chrono_Trigger.csv") as csv_file:
 
             if (line[2] == 127):
                 splitTempo(line)
+            if (line[2] == 0):
+                splitHeader(line)
 
             varyColors(line, track_len)
             colorizeTime (line)
@@ -229,7 +273,7 @@ with open(directory + "Chrono_Trigger.csv") as csv_file:
 
     print (image)
 
-    image.save(f"{output}Chrono_Trigger.png")
+    image.save(f"{output}FIGHTING.png")
 
 # for filename in os.listdir(directory):
 

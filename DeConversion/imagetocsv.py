@@ -2,6 +2,7 @@ import os
 import csv
 import numpy as np
 from PIL import Image
+from statistics import mean
 
 directory = "/Users/Nick/Desktop/Audio_Data/Formatted_CSV_Output/"
 output = "/Users/Nick/Desktop/Audio_Data/CSV_Output/"
@@ -26,6 +27,8 @@ def stringizeType (line):
         return 'End_track'
     elif (num == 63):
         return 'End_of_file'
+    elif (num == 74):
+        return 'Marker_t'
     elif (num == 84):
         return 'Time_signature'
     elif (num == 106):
@@ -59,7 +62,7 @@ def unpadLine (line):
             i-=1
 
 def fix (line):
-    if (line[2] == 'end_of_file' or line[2] == 'Start_track'):
+    if (line[2] == 'End_of_file' or line[2] == 'Start_track'):
         unpadLine(line)        
 
 def unvaryColors(line):
@@ -74,31 +77,66 @@ def popple (line):
 def normalizeLine (line):
     num = (int(line[6]))
     num2 = (int(line[2]))
-    if (num == 169 or num == 190 or num == 211 or num == 232 or num == 253 or num == 42):
+    if (num == 169 or num == 190 or num == 211 or num == 232 or num == 253 or num == 42 or num == 74):
         time = int (line[1]) * int (line[2]) * int (line[3]) * int (line[4]) * int (line[5])
         line[1] = str(time)
         popple(line)
+
+    elif (num2 == 0):
+        time = int (line[5]) * int (line[6]) * int(line[7])
+        line[5] = time
+        line.pop (7)
+        line.pop (6)
+
     elif (num2 == 127):
         time = int (line[3]) * int (line[4]) * int (line[5])
         line[3] = str(time)
         line.pop (6)
         line.pop (5)
         line.pop (4)
+    
+    elif num2 == 106:
+        if line[4] == 0:
+            line[4] = '"major"'
+        elif line[4] == 255:
+            line[4] = '"minor"'
+        
+    if (num2 == 74):
+        print (line[3])
+        if line[3] == 0:
+            line[3] = '"loopStart"'
+        elif line[3] == 255:
+            line[3] = '"loopEnd"'
 
 
-image = Image.open (f"{directory}Chrono_Trigger.png")
+# def normalizeTime (normalize, data, npdata, i):
+#     if normalize:
+#         data[i-1][1] = str(int(mean ((int(data[i-2][1]), int(data[i][1])))))
+#         return False
+#     elif (int(npdata[i][1]) < int(npdata[i -1][1])):
+#         return True
+
+def normalizeTime (data, i):
+    if (int(data[i][1]) < int(data[i - 1][1])):
+        data[i][1] = data[i - 1][1]
+
+image = Image.open (f"{directory}FIGHTING.png")
 npdata = np.asarray(image)
 npdata.setflags(write=1)
 npdata = npdata.astype('int')
 npdata = npdata.astype('str')
 
-with open(f"{output}Chrono_Trigger.csv", "w+") as csv_file:
+with open(f"{output}FIGHTING.csv", "w+") as csv_file:
 
     csv_writer = csv.writer(csv_file, delimiter=',')
 
     track_len = longest_track(npdata)
 
     data = []
+
+    # normalize = False
+
+    i = 0
 
     for line in npdata:
         line = line.tolist()
@@ -114,9 +152,14 @@ with open(f"{output}Chrono_Trigger.csv", "w+") as csv_file:
 
         data.append (line)
 
-    data = sorted(data, key=lambda x: int(x[1]))
+        if (line[1] != '0'):
+            normalizeTime(data, i)
 
-    print (data)
+        i+=1
+
+    # data = sorted(data, key=lambda x: int(x[1]))
+
+    # print (data)
 
     for line in data:
         line = [ f' {x}' for x in line ]
