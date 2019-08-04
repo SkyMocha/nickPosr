@@ -1,10 +1,10 @@
 import os
-import csv
+import csv as csvMod
 import numpy as np
 from PIL import Image
 import random
 
-directory = "/Users/Nick/Desktop/Audio_Data/testCSV/"
+directory = "/Users/Nick/Desktop/Audio_Data/CSV/"
 output = "/Users/Nick/Desktop/Audio_Data/Formatted_CSV/"
 
 def trackCount (csv):
@@ -227,45 +227,50 @@ def colorizeTime (line):
         line.insert (5, q)
         line[1] = r
 
-with open(directory + "FIGHTING.csv") as csv_file:
-    csv_reader = csv.reader(csv_file, delimiter=',')
+for filename in os.listdir(directory):
 
-    csv = list(csv_reader)
+    if not filename.startswith('.'):
 
-    track_len = longest_track(csv)
+        print (f"STARTING {filename}")
 
-    data = []
-    for line in csv:
-        if (numerizeType(line) != 111):
-            numerizeLine(line)
+        with open(directory + filename) as csv_file:
+            csv_reader = csvMod.reader(csv_file, delimiter=',')
 
-            if (line[2] == 127):
-                splitTempo(line)
-            if (line[2] == 0):
-                splitHeader(line)
+            csv = list(csv_reader)
 
-            varyColors(line, track_len)
-            colorizeTime (line)
+            track_len = longest_track(csv)
 
-            padLine(line)
+            data = []
+            for line in csv:
+                if (numerizeType(line) != 111):
+                    numerizeLine(line)
 
-            # print (line)
+                    if (line[2] == 127):
+                        splitTempo(line)
+                    if (line[2] == 0):
+                        splitHeader(line)
 
-            for elem in line:
-                if elem > 255:
-                    print ("LINE NOT ADDED")
+                    varyColors(line, track_len)
+                    colorizeTime (line)
+
+                    padLine(line)
+
                     # print (line)
-                    continue
 
-            data.append( line )
+                    for elem in line:
+                        if elem > 255:
+                            # print (line)
+                            continue
 
-    npdata = np.array (data, dtype='int')
+                    data.append( line )
 
-    npdata = np.uint8(npdata)
+            npdata = np.array (data, dtype='int')
 
-    image = Image.fromarray(npdata, mode="P")
-    image.save(f"{output}FIGHTING.png")
+            npdata = np.uint8(npdata)
 
-# for filename in os.listdir(directory):
+            image = Image.fromarray(npdata, mode="P")
+            image.save(f"{output + filename.replace('.csv', '')}.png")
 
-#     if not filename.startswith('.'):
+            print (f"{filename} DONE")
+
+print ("PROCESS COMPLETE")

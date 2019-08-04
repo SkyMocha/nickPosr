@@ -119,52 +119,58 @@ def normalizeTime (data, i):
     if (int(data[i][1]) < int(data[i - 1][1])):
         data[i][1] = data[i - 1][1]
 
-image = Image.open (f"{directory}FIGHTING.png")
-npdata = np.asarray(image)
-npdata.setflags(write=1)
-npdata = npdata.astype('int')
-npdata = npdata.astype('str')
+for filename in os.listdir(directory):
 
-with open(f"{output}FIGHTING.csv", "w+") as csv_file:
+    if not filename.startswith('.'):
 
-    csv_writer = csv.writer(csv_file, delimiter=',')
+        print (f"STARTING {filename}")
 
-    track_len = longest_track(npdata)
+        image = Image.open (f"{directory + filename}")
+        npdata = np.asarray(image)
+        npdata.setflags(write=1)
+        npdata = npdata.astype('int')
+        npdata = npdata.astype('str')
 
-    data = []
+        with open(f"{output + filename.replace('.png', '')}.csv", "w+") as csv_file:
 
-    # normalize = False
+            csv_writer = csv.writer(csv_file, delimiter=',')
 
-    i = 0
+            track_len = longest_track(npdata)
 
-    for line in npdata:
-        line = line.tolist()
+            data = []
 
-        normalizeLine(line)
+            # normalize = False
 
-        stringizeType (line)
-        stringizeLine (line)
-        unvaryColors (line)
+            i = 0
 
-        unpadLine(line)
-        fix (line)
+            for line in npdata:
+                line = line.tolist()
 
-        data.append (line)
+                normalizeLine(line)
 
-        if (line[1] != '0'):
-            normalizeTime(data, i)
+                stringizeType (line)
+                stringizeLine (line)
+                unvaryColors (line)
 
-        i+=1
+                unpadLine(line)
+                fix (line)
 
-    # data = sorted(data, key=lambda x: int(x[1]))
+                data.append (line)
 
-    # print (data)
+                if (line[1] != '0'):
+                    normalizeTime(data, i)
 
-    for line in data:
-        line = [ f' {x}' for x in line ]
+                i+=1
 
-        csv_writer.writerow(line)
+            # data = sorted(data, key=lambda x: int(x[1]))
 
-# for filename in os.listdir(directory):
+            # print (data)
 
-#     if not filename.startswith('.'):
+            for line in data:
+                line = [ f' {x}' for x in line ]
+
+                csv_writer.writerow(line)
+            
+            print (f"{filename} DONE")
+
+print ("PROCESS COMPLETE")
