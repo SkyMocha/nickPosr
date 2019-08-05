@@ -4,6 +4,8 @@ import numpy as np
 from PIL import Image
 import random
 
+from time import sleep
+
 directory = "/Users/Nick/Desktop/Audio_Data/CSV/"
 output = "/Users/Nick/Desktop/Audio_Data/Formatted_CSV/"
 
@@ -64,14 +66,21 @@ def numerizeLine (line):
         elif line[4] == ' "minor"':
             line[4] = 255
         else:
-            line[4] = (int(line[4]))
+            try:
+                line[4] = (int(line[4]))
+            except:
+                line[4] = 111
 
     if len(line) > 3:
         if line[3] == ' "loopStart"':
             line[3] = 0
         elif line[3] == ' "loopEnd"':
             line[3] = 255
-        line[3] = (int(line[3]))
+        else:
+            try:
+                line[3] = (int(line[3]))
+            except:
+                line[3] = 111
 
     if len(line) > 2:
         line[2] = numerizeType(line)
@@ -80,7 +89,10 @@ def numerizeLine (line):
         if (line[2] == 127 or line[2] == 106):
             line[1] = 0
         else:
-            line[1] = (int(line[1]))
+            try:
+                line[1] = (int(line[1]))
+            except:
+                line[1] = 111
         
     if len(line) > 0:
         line[0] = (int(line[0]))
@@ -227,50 +239,76 @@ def colorizeTime (line):
         line.insert (5, q)
         line[1] = r
 
+def addWhiteSpace (data):
+    blankLine = [111, 111, 111, 111, 111, 111, 111, 111, 111, 111, 111]
+    data.append(blankLine)
+    data.append(blankLine)
+    return True
+
+i = 0
+
 for filename in os.listdir(directory):
 
     if not filename.startswith('.'):
 
-        print (f"STARTING {filename}")
+        try:
 
-        with open(directory + filename) as csv_file:
-            csv_reader = csvMod.reader(csv_file, delimiter=',')
+            if i < 203:
+                i+=1
+                continue
 
-            csv = list(csv_reader)
+            print (f"STARTING {filename}")
 
-            track_len = longest_track(csv)
+            notes = False
 
-            data = []
-            for line in csv:
-                if (numerizeType(line) != 111):
-                    numerizeLine(line)
+            with open(directory + filename, encoding='utf-8', errors='ignore') as csv_file:
+                csv_reader = csvMod.reader(csv_file, delimiter=',')
 
-                    if (line[2] == 127):
-                        splitTempo(line)
-                    if (line[2] == 0):
-                        splitHeader(line)
+                csv = list(csv_reader)
 
-                    varyColors(line, track_len)
-                    colorizeTime (line)
+                track_len = longest_track(csv)
 
-                    padLine(line)
+                data = []
+                for line in csv:
+                    if (numerizeType(line) != 111):
+                        numerizeLine(line)
 
-                    # print (line)
+                        if (line[2] == 127):
+                            splitTempo(line)
+                        if (line[2] == 0):
+                            splitHeader(line)
 
-                    for elem in line:
-                        if elem > 255:
-                            # print (line)
-                            continue
+                        varyColors(line, track_len)
+                        colorizeTime (line)
 
-                    data.append( line )
+                        padLine(line)
 
-            npdata = np.array (data, dtype='int')
+                        if not notes and (line[2] == 169 or line[2] == 190 or line[2] == 211 or line[2] == 232 or line[2] == 253):
+                            notes = addWhiteSpace(data)
 
-            npdata = np.uint8(npdata)
+                        # print (line)
 
-            image = Image.fromarray(npdata, mode="P")
-            image.save(f"{output + filename.replace('.csv', '')}.png")
+                        for elem in line:
+                            if elem > 255:
+                                # print (line)
+                                continue
 
-            print (f"{filename} DONE")
+                        data.append( line )
+
+                        sleep (0.00000000000000075)
+
+                npdata = np.array (data, dtype='int')
+
+                npdata = np.uint8(npdata)
+
+                image = Image.fromarray(npdata, mode="P")
+                image.save(f"{output + filename.replace('.csv', '')}.png")
+
+                print (f"{filename} DONE")
+                i+=1
+        
+        except:
+            print (f"{filename} DID NOT WORK")
+            continue
 
 print ("PROCESS COMPLETE")
